@@ -9,6 +9,8 @@ class GameManager:
     def __init__(self,size) -> None:
         self.size = size
         self.startTiles = 2
+        
+        self.setup()
     
     def setup(self) -> None:
         """Set up the game"""
@@ -41,7 +43,7 @@ class GameManager:
 
     def prepareTiles(self) -> None:
         """Save all tile positions and remove merger info"""
-        for cell in self.grid.allCells():
+        for cell in self.grid.eachCell():
             tile = cell["tile"]
             if tile is not None:
                 tile.mergedFrom = None
@@ -53,8 +55,8 @@ class GameManager:
         self.grid.cells[cell.x][cell.y] = tile
         tile.updatePosition(cell)
 
-    def move(self, direction: int) -> None:
-
+    def move(self, direction: int) -> bool:
+        """Moves tiles on the grid in the specified direction"""
         if not self.isGameTerminated():
             vector = self.getVector(direction)
             transversals = self.buildTransversals(vector)
@@ -68,12 +70,12 @@ class GameManager:
                     tile = self.grid.cellContent(cell)
 
                     if tile is not None:
-                        farthest,next = self.findFarthestPosition(cell,vector)
-                        next = self.grid.cellContent(next)
+                        farthest,next = self.findFarthestPosition(cell, vector)
+                        nextTile = self.grid.cellContent(next)
 
-                        if next is not None and next.value == tile.value and next.mergedFrom is None:
+                        if nextTile is not None and nextTile.value == tile.value and nextTile.mergedFrom is None:
                             merged = Tile(next, tile.value*2)
-                            merged.mergedFrom = [tile, next]
+                            merged.mergedFrom = [tile, nextTile]
 
                             self.grid.insertTile(merged)
                             self.grid.removeTile(tile)
@@ -84,10 +86,12 @@ class GameManager:
 
                             if merged.value == 2048:
                                 self.won = True
-                            else:
-                                self.moveTile(tile, farthest)
 
-                        if self.positionsEqual(cell, tile):
+                        else:
+                            self.moveTile(tile, farthest)
+
+                        if not self.positionsEqual(cell, tile):
+                            # Tile moved from its original cell
                             moved = True
                             
             if moved:
@@ -95,35 +99,38 @@ class GameManager:
 
                 if not self.movesAvailable():
                     self.over = True
-
-
+            return moved
     
     def getVector(self, direction:int) -> Point2D:
         """Get the vector representing the chosen direction"""
         map = {
-            0: Point2D(0,-1), # Up
-            1: Point2D(1,0),  # Right
-            2: Point2D(0,1),  # Down
-            3: Point2D(-1,0)} # Left
+            0: Point2D(0,-1),
+            1: Point2D(1,0), 
+            2: Point2D(0,1), 
+            3: Point2D(-1,0)}
 
         return map[direction]
 
     def buildTransversals(self, vector:Point2D):
+        """Build a list of positions to transverse in the right order"""
         transversals = { "x": [], "y": []}
-        for pos in range(0,self.size):
+
+        for pos in range(0, self.size):
             transversals["x"].append(pos)
             transversals["y"].append(pos)
 
         if vector.x == 1: 
-            transversals["x"] = transversals["x"].reverse()
+            transversals["x"] = reversed(transversals["x"])
         if vector.y == 1: 
-            transversals["y"] = transversals["y"].reverse()
+            transversals["y"] = reversed(transversals["y"])
     
         return transversals
 
     def findFarthestPosition(self, cell:Point2D, vector:Point2D):
         previous = cell
+
         cell = Point2D(previous.x + vector.x, previous.y + vector.y)
+
         while self.grid.withinBounds(cell) and self.grid.cellAvailable(cell):
             previous = cell
             cell = Point2D(previous.x + vector.x, previous.y + vector.y)
@@ -148,17 +155,29 @@ class GameManager:
 
     def allTileMatches(self) -> list:
         matches = list()
-        for x in range(0,self.size):
-            for y in range(0,self.size):
-                tile = self.grid.cellContent(Point2D(x,y))
+        for cells in self.grid.cells:
+            for tile in cells:
                 if tile is not None:
-                    if y+1 < self.size:
-                        nextCell = self.grid.cellContent(Point2D(x,y+1))
-                        if nextCell is not None and nextCell.value == tile.value:
-                            matches.append((tile,nextCell))
-                            
+                    for direction in range(0,2):
+                        vector = self.getVector(direction)
+                        farthest, next = self.findFarthestPosition(Point2D(tile.x,tile.y),vector)
+                        next = self.grid.cellContent(next)
+                        if next is not None and next.value == tile.value:
+                            matches.append({"value": tile.value, "direction": direction})
+        return matches
 
+
+                            
 
     def positionsEqual(self, first:Point2D, second:Point2D) -> bool:
         return first.x == second.x and first.y == second.y
+
+    def printGrid(self):
+        for cells in self.grid.cells:
+            for cell in cells:
+                if cell is None:
+                    print("0", end = " ")
+                else:
+                    print(cell.value, end = " ")
+            print()
 

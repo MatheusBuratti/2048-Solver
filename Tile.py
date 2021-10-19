@@ -2,7 +2,7 @@ from Point2D import *
 class Tile:
     def __init__(self, position: Point2D, value:int = 2) -> None:
         self.x = position.x
-        self.y = position.x
+        self.y = position.y
         self.value = value
 
         self.previousPosition = None
