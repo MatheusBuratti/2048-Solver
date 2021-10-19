@@ -1,4 +1,4 @@
-from GameManager import *
+from Game.GameManager import *
 
 Game = GameManager(4)
 
