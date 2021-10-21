@@ -1,4 +1,3 @@
-from typing import Match
 from Game.GameManager import *
 
 Game = GameManager(4)
