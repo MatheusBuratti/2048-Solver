@@ -141,6 +141,7 @@ class GameManager:
         return self.grid.cellsAvailable() or self.tileMatchesAvailable()
 
     def tileMatchesAvailable(self) -> bool:
+        """Checks if there is any tile matches available"""
         for x in range(0,self.size):
             for y in range(0,self.size):
                 tile = self.grid.cellContent(Point2D(x,y))
@@ -152,8 +153,17 @@ class GameManager:
                         other = self.grid.cellContent(cell)
                         if other is not None and other.value == tile.value:
                             return True
+                            
+    def positionsEqual(self, first:Point2D, second:Point2D) -> bool:
+        return first.x == second.x and first.y == second.y
 
+
+    
     def allTileMatches(self) -> list:
+        """Returns a list of all possible matches.
+        Each item on the list has a value of the tiles to be matched
+        and the direction to play.
+        """
         matches = list()
         for cells in self.grid.cells:
             for tile in cells:
@@ -167,17 +177,4 @@ class GameManager:
         return matches
 
 
-                            
-
-    def positionsEqual(self, first:Point2D, second:Point2D) -> bool:
-        return first.x == second.x and first.y == second.y
-
-    def printGrid(self):
-        for cells in self.grid.cells:
-            for cell in cells:
-                if cell is None:
-                    print("0", end = " ")
-                else:
-                    print(cell.value, end = " ")
-            print()
 

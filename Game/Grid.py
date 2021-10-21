@@ -8,8 +8,11 @@ from Game.Point2D import *
 
 class Grid:
     def __init__(self, size) -> None:
-        self.size = size
+        self.size = size 
         self.cells = self.emptyGrid()
+
+        # Stores the highest value tile formed
+        self.highestValue = 2
 
     def emptyGrid(self) -> list:
         """Build a grid of the specified size"""
@@ -21,14 +24,14 @@ class Grid:
                 row.append(None)
         return cells
 
-    # def fromState(self, state:list) -> list:
-    #     """Returns a copy of a grid (state)"""
-    #     cells = list()
-    #     for x in range(0,self.size):
-    #         row = cells[x] = []
-    #         for y in range(0,self.size):
-    #             tile = state[x][y]
-    #             row.append(None if tile is None else Tile(Point2D(tile.x,tile.y),tile.value))
+    def fromState(self, state:list) -> list:
+        """Returns a copy of a grid (state)"""
+        cells = list()
+        for x in range(0,self.size):
+            row = cells[x] = []
+            for y in range(0,self.size):
+                tile = state[x][y]
+                row.append(None if tile is None else Tile(Point2D(tile.x,tile.y),tile.value))
 
     def randomAvailableCell(self) -> Point2D:
         cells = self.availableCells()
@@ -68,6 +71,8 @@ class Grid:
     def insertTile(self,tile:Tile) -> None:
         """Inserts a tile at its position"""
         self.cells[tile.x][tile.y] = tile
+        if tile.value > self.highestValue:
+            self.highestValue = tile.value
 
     def removeTile(self,tile:Tile) -> None:
         self.cells[tile.x][tile.y] = None
